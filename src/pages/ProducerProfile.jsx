@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Container,
   TextField,
-  Button,
   Typography,
   Box,
   Paper,
@@ -22,12 +21,21 @@ function ProducerProfile() {
     about: '',
   });
 
-  // Загружаем сохраненные данные при монтировании
   useEffect(() => {
+    // Загружаем сохраненные данные
     const savedProfile = localStorage.getItem('producerProfile');
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
     }
+
+    // Настраиваем главную кнопку Telegram
+    WebApp.MainButton.setText('Сохранить профиль');
+    WebApp.MainButton.onClick(handleSubmit);
+    WebApp.MainButton.show();
+
+    return () => {
+      WebApp.MainButton.offClick(handleSubmit);
+    };
   }, []);
 
   const handleInputChange = (e) => {
@@ -38,16 +46,30 @@ function ProducerProfile() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Сохраняем данные в localStorage
-    localStorage.setItem('producerProfile', JSON.stringify(profile));
-    setOpenSnackbar(true);
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
     
-    // После сохранения перенаправляем на список исполнителей
-    setTimeout(() => {
-      navigate('/performers');
-    }, 1500);
+    try {
+      // Сохраняем в localStorage
+      localStorage.setItem('producerProfile', JSON.stringify(profile));
+      
+      // Отправляем данные через Telegram WebApp
+      WebApp.sendData(JSON.stringify({
+        type: 'producer_profile',
+        data: profile
+      }));
+
+      // Показываем уведомление
+      setOpenSnackbar(true);
+      
+      // Закрываем WebApp после короткой задержки
+      setTimeout(() => {
+        WebApp.close();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setOpenSnackbar(true);
+    }
   };
 
   return (
@@ -102,17 +124,6 @@ function ProducerProfile() {
                 multiline
                 rows={4}
               />
-            </Grid>
-
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-              >
-                Сохранить профиль
-              </Button>
             </Grid>
           </Grid>
         </Box>

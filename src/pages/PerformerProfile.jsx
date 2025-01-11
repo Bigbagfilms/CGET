@@ -12,6 +12,7 @@ import {
   Snackbar,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
+import { WebApp } from '@vkruglikov/react-telegram-web-app';
 
 function PerformerProfile() {
   const navigate = useNavigate();
@@ -24,12 +25,21 @@ function PerformerProfile() {
     portfolio: []
   });
 
-  // Загружаем сохраненные данные при монтировании
   useEffect(() => {
+    // Загружаем сохраненные данные
     const savedProfile = localStorage.getItem('performerProfile');
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
     }
+
+    // Настраиваем главную кнопку Telegram
+    WebApp.MainButton.setText('Сохранить профиль');
+    WebApp.MainButton.onClick(handleSubmit);
+    WebApp.MainButton.show();
+
+    return () => {
+      WebApp.MainButton.offClick(handleSubmit);
+    };
   }, []);
 
   const handleInputChange = (e) => {
@@ -42,23 +52,36 @@ function PerformerProfile() {
 
   const handleFileUpload = (e) => {
     const files = Array.from(e.target.files);
-    // В реальном приложении здесь будет загрузка файлов на сервер
     setProfile(prev => ({
       ...prev,
       portfolio: [...prev.portfolio, ...files]
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Сохраняем данные в localStorage
-    localStorage.setItem('performerProfile', JSON.stringify(profile));
-    setOpenSnackbar(true);
+  const handleSubmit = async (e) => {
+    if (e) e.preventDefault();
     
-    // После сохранения перенаправляем на список проектов
-    setTimeout(() => {
-      navigate('/projects');
-    }, 1500);
+    try {
+      // Сохраняем в localStorage
+      localStorage.setItem('performerProfile', JSON.stringify(profile));
+      
+      // Отправляем данные через Telegram WebApp
+      WebApp.sendData(JSON.stringify({
+        type: 'performer_profile',
+        data: profile
+      }));
+
+      // Показываем уведомление
+      setOpenSnackbar(true);
+      
+      // Закрываем WebApp после короткой задержки
+      setTimeout(() => {
+        WebApp.close();
+      }, 1500);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setOpenSnackbar(true);
+    }
   };
 
   return (
@@ -143,17 +166,6 @@ function PerformerProfile() {
                   </Typography>
                 </Box>
               )}
-            </Grid>
-
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                fullWidth
-              >
-                Сохранить профиль
-              </Button>
             </Grid>
           </Grid>
         </Box>
