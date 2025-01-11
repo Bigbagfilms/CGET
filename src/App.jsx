@@ -22,14 +22,26 @@ import ProducerProfile from './pages/ProducerProfile';
 import ProjectsList from './pages/ProjectsList';
 import PerformersList from './pages/PerformersList';
 
+// Инициализация Telegram Web App
+if (WebApp.initData) {
+  console.log('Telegram Web App initialized with data:', WebApp.initData);
+} else {
+  console.log('Running outside of Telegram Web App');
+}
+
+// Настройка темы в соответствии с темой Telegram
 const theme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: WebApp.colorScheme || 'light',
     primary: {
       main: '#0088cc',
     },
   },
 });
+
+// Настройка цветов под тему Telegram
+WebApp.setHeaderColor(WebApp.colorScheme === 'dark' ? '#000000' : '#ffffff');
+WebApp.setBackgroundColor(WebApp.colorScheme === 'dark' ? '#000000' : '#ffffff');
 
 function NavigationBar() {
   const navigate = useNavigate();
@@ -72,6 +84,23 @@ function NavigationBar() {
 }
 
 function App() {
+  useEffect(() => {
+    // Настраиваем кнопку "Назад"
+    WebApp.BackButton.onClick(() => {
+      window.history.back();
+    });
+
+    // Показываем кнопку "Главное меню"
+    WebApp.MainButton.setText('Главное меню');
+    WebApp.MainButton.onClick(() => {
+      window.location.href = '/';
+    });
+    WebApp.MainButton.show();
+
+    // Расширяем приложение на весь экран
+    WebApp.expand();
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
