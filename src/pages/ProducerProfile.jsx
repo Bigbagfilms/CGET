@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   TextField,
@@ -7,15 +8,27 @@ import {
   Box,
   Paper,
   Grid,
+  Snackbar,
 } from '@mui/material';
+import { WebApp } from '@vkruglikov/react-telegram-web-app';
 
 function ProducerProfile() {
+  const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     company: '',
     position: '',
     about: '',
   });
+
+  // Загружаем сохраненные данные при монтировании
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('producerProfile');
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -27,8 +40,14 @@ function ProducerProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Здесь будет отправка данных на сервер
-    console.log('Producer profile data:', profile);
+    // Сохраняем данные в localStorage
+    localStorage.setItem('producerProfile', JSON.stringify(profile));
+    setOpenSnackbar(true);
+    
+    // После сохранения перенаправляем на список исполнителей
+    setTimeout(() => {
+      navigate('/performers');
+    }, 1500);
   };
 
   return (
@@ -98,6 +117,13 @@ function ProducerProfile() {
           </Grid>
         </Box>
       </Paper>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Профиль успешно сохранен"
+      />
     </Container>
   );
 }

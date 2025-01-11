@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -10,16 +10,23 @@ import {
   CardContent,
   CardActions,
 } from '@mui/material';
+import { WebApp } from '@vkruglikov/react-telegram-web-app';
 
 function Registration() {
   const navigate = useNavigate();
   
   const handleRoleSelect = (role) => {
+    // Сохраняем роль пользователя в localStorage
+    localStorage.setItem('userRole', role);
+    
     if (role === 'performer') {
       navigate('/performer/profile');
     } else {
       navigate('/producer/profile');
     }
+    
+    // Закрываем Telegram Web App после выбора роли
+    WebApp.close();
   };
 
   return (

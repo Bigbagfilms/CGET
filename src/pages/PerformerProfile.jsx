@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   TextField,
@@ -8,10 +9,13 @@ import {
   Paper,
   Grid,
   IconButton,
+  Snackbar,
 } from '@mui/material';
 import { PhotoCamera } from '@mui/icons-material';
 
 function PerformerProfile() {
+  const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [profile, setProfile] = useState({
     name: '',
     specialization: '',
@@ -19,6 +23,14 @@ function PerformerProfile() {
     description: '',
     portfolio: []
   });
+
+  // Загружаем сохраненные данные при монтировании
+  useEffect(() => {
+    const savedProfile = localStorage.getItem('performerProfile');
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,8 +51,14 @@ function PerformerProfile() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Здесь будет отправка данных на сервер
-    console.log('Profile data:', profile);
+    // Сохраняем данные в localStorage
+    localStorage.setItem('performerProfile', JSON.stringify(profile));
+    setOpenSnackbar(true);
+    
+    // После сохранения перенаправляем на список проектов
+    setTimeout(() => {
+      navigate('/projects');
+    }, 1500);
   };
 
   return (
@@ -140,6 +158,13 @@ function PerformerProfile() {
           </Grid>
         </Box>
       </Paper>
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        message="Профиль успешно сохранен"
+      />
     </Container>
   );
 }
